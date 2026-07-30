@@ -44,7 +44,7 @@ class HoSoTraCuuServiceTest {
         traLoi.setKetQua("Phe duyet ho so thanh cong");
 
         when(guiHoSoRepository.findByMaSoHoSo("NSW-2026-001")).thenReturn(Optional.of(hoSo));
-        when(traLoiRepository.findByMaSoHoSo("NSW-2026-001")).thenReturn(Optional.of(traLoi));
+        when(traLoiRepository.findFirstByMaSoHoSoOrderByLastModifiedDateDesc("NSW-2026-001")).thenReturn(Optional.of(traLoi));
 
         var result = hoSoTraCuuService.traCuu("NSW-2026-001");
 

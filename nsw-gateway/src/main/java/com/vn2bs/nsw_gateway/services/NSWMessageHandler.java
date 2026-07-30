@@ -24,6 +24,7 @@ import com.vn2bs.common.services.MessageLogService;
 import com.vn2bs.common.services.OutboxService;
 import com.vn2bs.common.utils.CorrelationIdSupport;
 import com.vn2bs.common.utils.NameUtil;
+import com.vn2bs.common.websocket.HoSoStatusNotifier;
 import com.vn2bs.nsw_gateway.mapper.ThuTuc1.GuiHoSoMapper;
 
 import io.minio.BucketExistsArgs;
@@ -63,6 +64,9 @@ public class NSWMessageHandler {
 
     @Autowired
     private GatewayMetrics gatewayMetrics;
+
+    @Autowired
+    private HoSoStatusNotifier hoSoStatusNotifier;
 
     @Transactional
     public GuiHoSoSubmitResponse ThuTuc1_GuiHoSo(GuiHoSoDto message, List<MultipartFile> tepDinhKem)
@@ -107,6 +111,8 @@ public class NSWMessageHandler {
         entity = guiHoSoRepository.save(entity);
         log.info("Saved GuiHoSo entity: id={} maSoHoSo={} correlationId={}",
                 entity.getId(), entity.getMaSoHoSo(), entity.getCorrelationId());
+
+        hoSoStatusNotifier.notifyMaSoHoSoCreated(entity);
 
         messageLogService.logSent(
                 entity.getCorrelationId(),

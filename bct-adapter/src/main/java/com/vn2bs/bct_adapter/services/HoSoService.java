@@ -17,6 +17,7 @@ import com.vn2bs.common.dto.ThuTuc1.GuiHoSoDto;
 import com.vn2bs.common.repositories.ThuTuc1.ThuTuc1_GuiHoSoRepository;
 import com.vn2bs.common.services.BusinessStatusValidator;
 import com.vn2bs.common.services.MessageLogService;
+import com.vn2bs.common.websocket.HoSoStatusNotifier;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +40,9 @@ public class HoSoService {
     @Autowired
     private BusinessStatusValidator businessStatusValidator;
 
+    @Autowired
+    private HoSoStatusNotifier hoSoStatusNotifier;
+
     public void markChoXuLy(ThuTuc1_GuiHoSo message) {
         if (messageLogService.isAlreadyProcessed(message.getCorrelationId())) {
             log.warn("Duplicate BCT GuiHoSo skipped correlationId={} maSoHoSo={}",
@@ -56,6 +60,8 @@ public class HoSoService {
             record.setCorrelationId(message.getCorrelationId());
         }
         guiHoSoRepository.save(record);
+
+        hoSoStatusNotifier.notifyListItemAdded(record);
 
         messageLogService.logProcessedSuccess(
                 record.getCorrelationId(),

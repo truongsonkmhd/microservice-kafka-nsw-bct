@@ -17,8 +17,11 @@ import com.vn2bs.common.domains.ThuTuc1.ThuTuc1_TraLoi;
 import com.vn2bs.common.dto.ThuTuc1.TraLoiDto;
 import com.vn2bs.common.repositories.ThuTuc1.ThuTuc1_GuiHoSoRepository;
 import com.vn2bs.common.repositories.ThuTuc1.ThuTuc1_TraLoiRepository;
+import com.vn2bs.common.services.BusinessStatusValidator;
 import com.vn2bs.common.services.MessageLogService;
 import com.vn2bs.common.services.OutboxService;
+import com.vn2bs.common.services.TraLoiStatusResolver;
+import com.vn2bs.common.websocket.HoSoStatusNotifier;
 import com.vn2bs.common.ws.MessageContextSupport;
 import com.vn2bs.nsw_gateway.xsd.bct.thutuc1.TraLoiRequest;
 import com.vn2bs.nsw_gateway.xsd.bct.thutuc1.TraLoiResponse;
@@ -42,6 +45,15 @@ public class ThuTuc1Service {
 
     @Autowired
     private OutboxService outboxService;
+
+    @Autowired
+    private BusinessStatusValidator businessStatusValidator;
+
+    @Autowired
+    private TraLoiStatusResolver traLoiStatusResolver;
+
+    @Autowired
+    private HoSoStatusNotifier hoSoStatusNotifier;
 
     @Transactional
     public TraLoiResponse traLoi(TraLoiRequest request) {
@@ -83,13 +95,25 @@ public class ThuTuc1Service {
             return duplicate;
         }
 
-        ThuTuc1_TraLoi entity = new ThuTuc1_TraLoi();
+        ThuTuc1_TraLoi entity = traLoiRepository
+                .findFirstByMaSoHoSoOrderByLastModifiedDateDesc(request.getMaSoHoSo())
+                .orElse(new ThuTuc1_TraLoi());
         entity.setMaSoHoSo(request.getMaSoHoSo());
         entity.setKetQua(request.getKetQua());
         entity.setCorrelationId(correlationId);
-        entity.setStatus(Status.CREATED);
+        entity.setStatus(Status.COMPLETED);
         traLoiRepository.save(entity);
         log.info("Saved TraLoi entity id={} maSoHoSo={}", entity.getId(), entity.getMaSoHoSo());
+
+        hoSo.ifPresent(record -> {
+            BusinessStatus targetStatus = traLoiStatusResolver.resolve(request.getKetQua());
+            businessStatusValidator.validateTransition(record.getBusinessStatus(), targetStatus);
+            record.setBusinessStatus(targetStatus);
+            record.setStatus(Status.COMPLETED);
+            guiHoSoRepository.save(record);
+            log.info("Updated GuiHoSo maSoHoSo={} businessStatus={}", record.getMaSoHoSo(), targetStatus);
+            hoSoStatusNotifier.notifyMaSoHoSoChanged(record, request.getKetQua());
+        });
 
         TraLoiDto dto = new TraLoiDto();
         dto.setMaSoHoSo(request.getMaSoHoSo());
@@ -109,13 +133,6 @@ public class ThuTuc1Service {
                 MessageParty.NSW,
                 MessageType.TRA_LOI,
                 payloadXml,
-                request.getMaSoHoSo());
-
-        messageLogService.logProcessedSuccess(
-                correlationId,
-                MessageParty.BCT,
-                MessageParty.NSW,
-                MessageType.TRA_LOI,
                 request.getMaSoHoSo());
 
         TraLoiResponse response = new TraLoiResponse();

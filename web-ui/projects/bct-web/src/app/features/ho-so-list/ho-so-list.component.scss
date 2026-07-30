@@ -1,0 +1,94 @@
+.list-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    color: #4a148c;
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: #fff3e0;
+  color: #ef6c00;
+  font-size: 0.875rem;
+  white-space: nowrap;
+
+  &.connected {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+.list-card {
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(74, 20, 140, 0.08);
+}
+
+.toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 0.5rem 0 1rem;
+}
+
+.status-hint {
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+
+.status-option-label {
+  display: block;
+  font-weight: 500;
+}
+
+.status-option-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.55);
+  white-space: normal;
+}
+
+.item-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.item-card {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border-left: 4px solid #7b1fa2;
+}
+
+.item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-text {
+  color: #c62828;
+}
+
+.empty-text {
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 1rem;
+}

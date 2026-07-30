@@ -17,7 +17,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 import org.springframework.util.backoff.FixedBackOff;
 
@@ -56,16 +56,12 @@ public class GuiHoSoKafkaConfiguration {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, ThuTuc1GuiHoSoKafkaDeserializer.class);
 
-        JacksonJsonDeserializer<ThuTuc1_GuiHoSo> deserializer = new JacksonJsonDeserializer<>(ThuTuc1_GuiHoSo.class);
-        deserializer.addTrustedPackages("*");
-        deserializer.setUseTypeHeaders(false);
-
-        return new DefaultKafkaConsumerFactory<>(
-                props,
-                new StringDeserializer(),
-                deserializer);
+        return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
@@ -73,10 +69,14 @@ public class GuiHoSoKafkaConfiguration {
         ConcurrentKafkaListenerContainerFactory<String, ThuTuc1_GuiHoSo> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(ThuTuc1_GuiHoSo_consumerFactory());
-        factory.setCommonErrorHandler(new DefaultErrorHandler((record, ex) ->
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler((record, ex) ->
                 log.error("GuiHoSo Kafka listener failed topic={} partition={} offset={} error={}",
                         record.topic(), record.partition(), record.offset(), ex.getMessage(), ex),
-                new FixedBackOff(1000L, 2L)));
+                new FixedBackOff(1000L, 2L));
+        errorHandler.addNotRetryableExceptions(
+                org.apache.kafka.common.errors.SerializationException.class,
+                org.springframework.kafka.support.serializer.DeserializationException.class);
+        factory.setCommonErrorHandler(errorHandler);
         return factory;
     }
 }

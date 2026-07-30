@@ -4,21 +4,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.gson.Gson;
 import com.vn2bs.common.domains.OutboxEvent;
 import com.vn2bs.common.domains.OutboxStatus;
 import com.vn2bs.common.repositories.OutboxEventRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j
 public class OutboxService {
 
-    private final Gson gson = new Gson();
-
     @Autowired
     private OutboxEventRepository outboxEventRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Transactional
     public OutboxEvent enqueue(String topic, String dlqTopic, String payload, String payloadType, String aggregateKey) {
@@ -37,6 +38,10 @@ public class OutboxService {
     @Transactional
     public OutboxEvent enqueueObject(String topic, String dlqTopic, Object payload, String payloadType,
             String aggregateKey) {
-        return enqueue(topic, dlqTopic, gson.toJson(payload), payloadType, aggregateKey);
+        try {
+            return enqueue(topic, dlqTopic, objectMapper.writeValueAsString(payload), payloadType, aggregateKey);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to serialize outbox payload for " + aggregateKey, ex);
+        }
     }
 }

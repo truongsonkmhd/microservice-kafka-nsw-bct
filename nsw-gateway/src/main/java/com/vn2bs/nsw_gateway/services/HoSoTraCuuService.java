@@ -33,7 +33,7 @@ public class HoSoTraCuuService {
         response.setCreatedDate(hoSo.getCreatedDate());
         response.setLastModifiedDate(hoSo.getLastModifiedDate());
 
-        traLoiRepository.findByMaSoHoSo(maSoHoSo)
+        traLoiRepository.findFirstByMaSoHoSoOrderByLastModifiedDateDesc(maSoHoSo)
                 .map(ThuTuc1_TraLoi::getKetQua)
                 .ifPresent(response::setKetQua);
 

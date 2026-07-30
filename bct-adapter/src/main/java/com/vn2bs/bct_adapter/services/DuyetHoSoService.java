@@ -16,6 +16,7 @@ import com.vn2bs.common.repositories.ThuTuc1.ThuTuc1_GuiHoSoRepository;
 import com.vn2bs.common.repositories.ThuTuc1.ThuTuc1_TraLoiRepository;
 import com.vn2bs.common.services.BusinessStatusValidator;
 import com.vn2bs.common.utils.CorrelationIdSupport;
+import com.vn2bs.common.websocket.HoSoStatusNotifier;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,15 +36,21 @@ public class DuyetHoSoService {
     @Autowired
     private BusinessStatusValidator businessStatusValidator;
 
+    @Autowired
+    private HoSoStatusNotifier hoSoStatusNotifier;
+
     public void duyet(String maSoHoSo, DuyetRequest request) {
         validateDuyetRequest(request);
         ThuTuc1_GuiHoSo hoSo = findHoSoOrThrow(maSoHoSo);
         assertChoXuLy(hoSo);
+        BusinessStatus listStatus = hoSo.getBusinessStatus();
 
         businessStatusValidator.validateTransition(hoSo.getBusinessStatus(), BusinessStatus.DA_XU_LY);
         hoSo.setBusinessStatus(BusinessStatus.DA_XU_LY);
         hoSo.setStatus(Status.COMPLETED);
         guiHoSoRepository.save(hoSo);
+
+        hoSoStatusNotifier.notifyListItemRemoved(maSoHoSo, listStatus);
 
         String correlationId = CorrelationIdSupport.generate();
         saveTraLoi(maSoHoSo, request.getKetQua(), null, request.getTenNguoiXuLy(), correlationId);
@@ -59,11 +66,14 @@ public class DuyetHoSoService {
         validateTuChoiRequest(request);
         ThuTuc1_GuiHoSo hoSo = findHoSoOrThrow(maSoHoSo);
         assertChoXuLy(hoSo);
+        BusinessStatus listStatus = hoSo.getBusinessStatus();
 
         businessStatusValidator.validateTransition(hoSo.getBusinessStatus(), BusinessStatus.DA_XU_LY);
         hoSo.setBusinessStatus(BusinessStatus.DA_XU_LY);
         hoSo.setStatus(Status.COMPLETED);
         guiHoSoRepository.save(hoSo);
+
+        hoSoStatusNotifier.notifyListItemRemoved(maSoHoSo, listStatus);
 
         String ketQua = "Tu choi: " + request.getLyDo();
         String correlationId = CorrelationIdSupport.generate();

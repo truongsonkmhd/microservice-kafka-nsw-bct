@@ -1,0 +1,16 @@
+{
+  "/api/bct": {
+    "target": "http://localhost:8085",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/bct": "/bct"
+    }
+  },
+  "/ws/bct": {
+    "target": "http://localhost:8085",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true
+  }
+}

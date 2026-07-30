@@ -1,0 +1,16 @@
+{
+  "/api/nsw": {
+    "target": "http://localhost:8084",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/nsw": "/nsw"
+    }
+  },
+  "/ws/nsw": {
+    "target": "http://localhost:8084",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true
+  }
+}

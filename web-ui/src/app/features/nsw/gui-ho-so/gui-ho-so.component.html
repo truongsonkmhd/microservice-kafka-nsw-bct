@@ -1,0 +1,70 @@
+<div class="page-grid">
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>Nộp hồ sơ điện tử</mat-card-title>
+      <mat-card-subtitle>Khai báo thông tin nhập khẩu &amp; đính kèm tệp (bước 1)</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Tên người gửi / Doanh nghiệp</mat-label>
+          <input matInput formControlName="tenNguoiGui" placeholder="Công ty ABC" />
+          @if (form.controls.tenNguoiGui.touched && form.controls.tenNguoiGui.hasError('required')) {
+            <mat-error>Vui lòng nhập tên người gửi</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="file-field">
+          <label class="file-label" for="tepDinhKem">Tệp đính kèm (tùy chọn)</label>
+          <input id="tepDinhKem" type="file" multiple (change)="onFilesSelected($event)" />
+          @if (selectedFiles.length) {
+            <ul class="file-list">
+              @for (file of selectedFiles; track file.name; let i = $index) {
+                <li>
+                  <mat-icon>attach_file</mat-icon>
+                  <span>{{ file.name }}</span>
+                  <button mat-icon-button type="button" (click)="removeFile(i)" aria-label="Xóa file">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        @if (errorMessage) {
+          <p class="error-text">{{ errorMessage }}</p>
+        }
+
+        <div class="actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="loading">
+            <mat-icon>send</mat-icon>
+            Gửi hồ sơ
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  @if (submitResult) {
+    <app-ho-so-tracker
+      [maSoHoSo]="submitResult.maSoHoSo"
+      [businessStatus]="businessStatus"
+      [ketQua]="ketQua"
+      [lastUpdated]="lastUpdated"
+      [wsConnected]="wsConnected"
+    />
+
+    <div class="post-submit-actions">
+      <a mat-stroked-button routerLink="/tra-cuu" [queryParams]="{ maSoHoSo: submitResult.maSoHoSo }">
+        <mat-icon>open_in_new</mat-icon>
+        Mở màn tra cứu
+      </a>
+    </div>
+  }
+</div>

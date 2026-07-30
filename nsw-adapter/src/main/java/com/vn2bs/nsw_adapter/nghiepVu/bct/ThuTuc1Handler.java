@@ -15,6 +15,7 @@ import com.vn2bs.common.dto.ThuTuc1.TraLoiDto;
 import com.vn2bs.common.repositories.ThuTuc1.ThuTuc1_GuiHoSoRepository;
 import com.vn2bs.common.services.BusinessStatusValidator;
 import com.vn2bs.common.services.MessageLogService;
+import com.vn2bs.common.services.TraLoiStatusResolver;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,17 +34,14 @@ public class ThuTuc1Handler {
     @Autowired
     private BusinessStatusValidator businessStatusValidator;
 
+    @Autowired
+    private TraLoiStatusResolver traLoiStatusResolver;
+
     @KafkaListener(topics = GlobalConfig.Kafka.Topic.BCT.ThuTuc1.TRA_LOI_WS, groupId = "bct", containerFactory = "kafkaListenerContainerFactory")
     public void traLoi(String request) {
         TraLoiDto dto = gson.fromJson(request, TraLoiDto.class);
         log.info("Received TraLoi at NSW adapter maSoHoSo={} correlationId={}",
                 dto.getMaSoHoSo(), dto.getCorrelationId());
-
-        if (messageLogService.isAlreadyProcessed(dto.getCorrelationId())) {
-            log.warn("Duplicate TraLoi skipped correlationId={} maSoHoSo={}",
-                    dto.getCorrelationId(), dto.getMaSoHoSo());
-            return;
-        }
 
         ThuTuc1_GuiHoSo hoSo = guiHoSoRepository.findByMaSoHoSo(dto.getMaSoHoSo()).orElse(null);
         if (hoSo == null) {
@@ -58,7 +56,13 @@ public class ThuTuc1Handler {
             return;
         }
 
-        BusinessStatus targetStatus = resolveBusinessStatus(dto.getKetQua());
+        BusinessStatus targetStatus = traLoiStatusResolver.resolve(dto.getKetQua());
+        if (hoSo.getBusinessStatus() == targetStatus) {
+            log.info("TraLoi already applied maSoHoSo={} businessStatus={}",
+                    hoSo.getMaSoHoSo(), hoSo.getBusinessStatus());
+            return;
+        }
+
         businessStatusValidator.validateTransition(hoSo.getBusinessStatus(), targetStatus);
         hoSo.setBusinessStatus(targetStatus);
         hoSo.setStatus(Status.COMPLETED);
@@ -72,12 +76,5 @@ public class ThuTuc1Handler {
                 dto.getMaSoHoSo());
 
         log.info("Updated GuiHoSo maSoHoSo={} businessStatus={}", hoSo.getMaSoHoSo(), hoSo.getBusinessStatus());
-    }
-
-    static BusinessStatus resolveBusinessStatus(String ketQua) {
-        if (ketQua != null && ketQua.toLowerCase().contains("tu choi")) {
-            return BusinessStatus.TU_CHOI;
-        }
-        return BusinessStatus.DA_PHE_DUYET;
     }
 }

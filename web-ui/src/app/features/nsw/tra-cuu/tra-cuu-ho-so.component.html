@@ -1,0 +1,40 @@
+<mat-card class="search-card">
+  <mat-card-header>
+    <mat-card-title>Tra cứu hồ sơ</mat-card-title>
+    <mat-card-subtitle>Theo dõi trạng thái &amp; nhận kết quả từ BCT (bước 5–11)</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (loading) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+
+    <form [formGroup]="form" (ngSubmit)="search()" class="search-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Mã số hồ sơ</mat-label>
+        <input matInput formControlName="maSoHoSo" placeholder="NSW-2026-0001" />
+        @if (form.controls.maSoHoSo.touched && form.controls.maSoHoSo.hasError('required')) {
+          <mat-error>Nhập mã số hồ sơ</mat-error>
+        }
+      </mat-form-field>
+      <button mat-flat-button color="primary" type="submit" [disabled]="loading">
+        <mat-icon>search</mat-icon>
+        Tra cứu
+      </button>
+    </form>
+
+    @if (errorMessage) {
+      <p class="error-text">{{ errorMessage }}</p>
+    }
+  </mat-card-content>
+</mat-card>
+
+@if (result) {
+  <app-ho-so-tracker
+    [maSoHoSo]="result.maSoHoSo"
+    [businessStatus]="result.businessStatus"
+    [ketQua]="result.ketQua ?? null"
+    [lastUpdated]="result.lastModifiedDate ?? null"
+    [wsConnected]="wsConnected"
+  />
+}

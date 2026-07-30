@@ -1,0 +1,63 @@
+<div class="list-page">
+  <div class="list-header">
+    <div>
+      <h2>Hồ sơ chờ xử lý</h2>
+      <p>Danh sách cập nhật realtime khi NSW gửi hồ sơ sang BCT</p>
+    </div>
+    <span class="live-pill" [class.connected]="wsConnected">
+      <mat-icon>{{ wsConnected ? 'sensors' : 'sync' }}</mat-icon>
+      {{ wsConnected ? 'WebSocket live' : 'Đang kết nối...' }}
+    </span>
+  </div>
+
+  <mat-card class="list-card">
+    <mat-card-content>
+      <div class="toolbar">
+        <mat-form-field appearance="outline">
+          <mat-label>Trạng thái nghiệp vụ</mat-label>
+          <mat-select [formControl]="statusControl">
+            @for (status of statusOptions; track status) {
+              <mat-option [value]="status">
+                <span class="status-option-label">{{ statusLabels[status] }}</span>
+                <span class="status-option-hint">{{ statusHints[status] }}</span>
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" (click)="loadList()" [disabled]="loading">
+          <mat-icon>refresh</mat-icon>
+          Tải lại
+        </button>
+      </div>
+
+      @if (selectedStatusHint) {
+        <p class="status-hint">{{ selectedStatusHint }}</p>
+      }
+
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+
+      @if (errorMessage) {
+        <p class="error-text">{{ errorMessage }}</p>
+      }
+
+      <div class="item-grid">
+        @for (row of items; track row.maSoHoSo) {
+          <mat-card class="item-card">
+            <div class="item-top">
+              <strong>{{ row.maSoHoSo }}</strong>
+              <a mat-button color="primary" [routerLink]="['/ho-so', row.maSoHoSo]">Chi tiết</a>
+            </div>
+            <p>{{ row.tenNguoiGui }}</p>
+          </mat-card>
+        }
+      </div>
+
+      @if (!loading && !items.length) {
+        <p class="empty-text">Không có hồ sơ với trạng thái đã chọn.</p>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

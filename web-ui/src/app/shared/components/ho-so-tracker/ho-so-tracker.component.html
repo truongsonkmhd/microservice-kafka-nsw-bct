@@ -1,0 +1,79 @@
+<mat-card class="tracker-card">
+  <mat-card-header>
+    <mat-card-title>Theo dõi hồ sơ</mat-card-title>
+    <mat-card-subtitle>Mã hồ sơ: {{ maSoHoSo }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="tracker-toolbar">
+      <button mat-stroked-button type="button" (click)="copyMaSoHoSo()">
+        <mat-icon>content_copy</mat-icon>
+        Sao chép mã
+      </button>
+    </div>
+
+    @if (statusHint) {
+      <p class="status-hint">{{ statusHint }}</p>
+    }
+
+    <ol class="workflow-steps">
+      @for (step of steps; track step.id) {
+        <li [class]="stepState(step.order)">
+          <div class="step-icon">
+            <mat-icon>{{ stepState(step.order) === 'done' ? 'check_circle' : step.icon }}</mat-icon>
+          </div>
+          <div class="step-body">
+            <strong>{{ step.label }}</strong>
+            <span>{{ step.hint }}</span>
+          </div>
+        </li>
+      }
+    </ol>
+
+    <div class="current-status">
+      <span>Trạng thái hiện tại</span>
+      <strong [class.approved]="workflow.isApproved" [class.rejected]="workflow.isRejected">
+        {{ statusLabel }}
+      </strong>
+      @if (lastUpdated) {
+        <small>Cập nhật: {{ lastUpdated | date: 'dd/MM/yyyy HH:mm:ss' }}</small>
+      }
+    </div>
+
+    @if (workflow.isApproved) {
+      <div class="result-panel success">
+        <mat-icon>verified</mat-icon>
+        <div>
+          <strong>Hồ sơ đã được phê duyệt</strong>
+          @if (ketQua) {
+            <p>{{ ketQua }}</p>
+          }
+          <p class="cta-text">Bạn có thể tiếp tục các bước thông quan hải quan trên hệ thống NSW.</p>
+          <button mat-flat-button color="primary" type="button" disabled>
+            Tiếp tục thủ tục hải quan
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (workflow.isRejected) {
+      <div class="result-panel rejected">
+        <mat-icon>cancel</mat-icon>
+        <div>
+          <strong>Hồ sơ bị từ chối</strong>
+          @if (ketQua) {
+            <p>{{ ketQua }}</p>
+          }
+          <p class="cta-text">Vui lòng bổ sung hồ sơ và nộp lại nếu cần.</p>
+        </div>
+      </div>
+    }
+
+    @if (!workflow.isTerminal && businessStatus === 'CHO_PHE_DUYET') {
+      <div class="waiting-panel">
+        <mat-icon>hourglass_empty</mat-icon>
+        <span>Hồ sơ đã chuyển sang BCT — đang chờ cán bộ phê duyệt. Trang sẽ tự cập nhật khi có kết quả.</span>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

@@ -12,5 +12,7 @@ public interface ThuTuc1_TraLoiRepository extends JpaRepository<ThuTuc1_TraLoi, 
 
     Optional<ThuTuc1_TraLoi> findByMaSoHoSo(String maSoHoSo);
 
+    Optional<ThuTuc1_TraLoi> findFirstByMaSoHoSoOrderByLastModifiedDateDesc(String maSoHoSo);
+
     Optional<ThuTuc1_TraLoi> findByBucketName(String bucketName);
 }

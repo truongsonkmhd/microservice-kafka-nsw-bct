@@ -1,0 +1,61 @@
+<a mat-button routerLink="/">
+  <mat-icon>arrow_back</mat-icon>
+  Quay lại danh sách
+</a>
+
+<mat-card class="detail-card">
+  <mat-card-header>
+    <mat-card-title>Chi tiết hồ sơ</mat-card-title>
+    <mat-card-subtitle>{{ maSoHoSo }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (loading) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+
+    @if (errorMessage) {
+      <p class="error-text">{{ errorMessage }}</p>
+    }
+
+    @if (detail) {
+      <div class="detail-grid">
+        <div class="detail-row">
+          <span class="label">Mã hồ sơ</span>
+          <strong>{{ detail.maSoHoSo }}</strong>
+        </div>
+        <div class="detail-row">
+          <span class="label">Người gửi</span>
+          <span>{{ detail.tenNguoiGui }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Trạng thái</span>
+          <mat-chip>{{ detail.businessStatus | businessStatusLabel }}</mat-chip>
+        </div>
+        @if (detail.taiLieuDinhKem?.length) {
+          <div class="detail-row">
+            <span class="label">Tài liệu đính kèm</span>
+            <ul>
+              @for (file of detail.taiLieuDinhKem; track file) {
+                <li>{{ file }}</li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
+      @if (canProcess) {
+        <div class="actions">
+          <button mat-flat-button color="primary" type="button" (click)="openDuyetDialog()">
+            <mat-icon>check_circle</mat-icon>
+            Phê duyệt
+          </button>
+          <button mat-stroked-button color="warn" type="button" (click)="openTuChoiDialog()">
+            <mat-icon>cancel</mat-icon>
+            Từ chối
+          </button>
+        </div>
+      }
+    }
+  </mat-card-content>
+</mat-card>
